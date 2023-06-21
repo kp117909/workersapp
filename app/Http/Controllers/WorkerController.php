@@ -13,7 +13,7 @@ class WorkerController extends Controller
 {
     function index(Request $request){
 
-        $query = Employees::query()->with('titles', 'salaries');
+        $query = Employees::query()->with(['titles', 'salaries', 'latestDepartmentManager.department', 'latestDepartmentEmployee.department']);
 
         $departaments = Departments::all();
 
@@ -74,21 +74,33 @@ class WorkerController extends Controller
             }
         }
 
+
+
         if ($request->has('departments')) {
             $selectedDepartments = $request->input('departments');
 
-            $query->where(function ($query) use ($selectedDepartments) {
-                $query->whereHas('latestDepartmentEmployee.department', function ($subQuery) use ($selectedDepartments) {
-                    $subQuery->whereIn('dept_no', $selectedDepartments);
-                });
-
-                $query->orWhereHas('latestDepartmentManager.department', function ($subQuery) use ($selectedDepartments) {
-                    $subQuery->whereIn('dept_no', $selectedDepartments);
-                });
-            });
+            $query->select('employees.*', 'departments.dept_no')
+                ->leftJoin('dept_emp', function ($join) {
+                    $join->on('employees.emp_no', '=', 'dept_emp.emp_no')
+                        ->where('dept_emp.from_date', function ($subQuery) {
+                            $subQuery->selectRaw('MAX(from_date)')
+                                ->from('dept_emp')
+                                ->whereColumn('dept_emp.emp_no', 'employees.emp_no');
+                        });
+                })
+                ->leftJoin('departments', 'dept_emp.dept_no', '=', 'departments.dept_no')
+                ->leftJoin('dept_manager', function ($join) {
+                    $join->on('employees.emp_no', '=', 'dept_manager.emp_no')
+                        ->where('dept_manager.from_date', function ($subQuery) {
+                            $subQuery->selectRaw('MAX(from_date)')
+                                ->from('dept_manager')
+                                ->whereColumn('dept_manager.emp_no', 'employees.emp_no');
+                        });
+                })
+                ->whereIn('departments.dept_no', $selectedDepartments);
         }
 
-        $query = $query->paginate(50);
+        $query = $query->paginate(10);
 
 
         return view('welcome', ['employees' => $query, 'departaments' => $departaments]);

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Employees extends Model
 {
@@ -53,13 +54,12 @@ class Employees extends Model
 
     public function latestDepartmentEmployee()
     {
-        return $this->hasOne(DeptEmp::class, 'emp_no', 'emp_no')
+        return $this->hasMany(DeptEmp::class, 'emp_no', 'emp_no')
             ->latest('from_date');
     }
-
     public function latestDepartmentManager()
     {
-        return $this->hasOne(DeptManager::class, 'emp_no', 'emp_no')
+        return $this->hasMany(DeptManager::class, 'emp_no', 'emp_no')
             ->latest('from_date');
     }
 

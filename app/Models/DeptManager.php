@@ -13,12 +13,11 @@ class DeptManager extends Model
 
     public function department()
     {
-        return $this->hasMany(Departments::class, 'dept_no', 'dept_no');
+        return $this->belongsTo(Departments::class, 'dept_no', 'dept_no');
     }
-
     public function employee()
     {
-        return $this->hasMany(Employees::class, 'emp_no', 'emp_no');
+        return $this->belongsTo(Employees::class, 'emp_no', 'emp_no');
     }
 
 }

@@ -134,6 +134,15 @@
                         @endforeach
                         </tbody>
                     </table>
+                    {{ $employees->appends([
+                        'filter' => request()->input('filter') ,
+                        'search' =>request()->input('search'),
+                        'valueLow' =>request()->input('valueLow'),
+                        'valueHigh' =>request()->input('valueHigh'),
+                        'filterMale'=> request()->input('filterMale'),
+                        'filterFemale' =>request()->input('filterFemale'),
+                        'departments' => request()->input('departments')
+                    ])->onEachSide(1)->links('pagination::simple-bootstrap-4') }}
                 </div>
             </div>
         </div>
