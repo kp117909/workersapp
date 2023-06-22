@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\WorkerController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,4 +14,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', [\App\Http\Controllers\WorkerController::class, 'index'])->name('index');
+Route::get('/', [WorkerController::class, 'index'])->name('index');
+
+Route::get('/export', [WorkerController::class, 'generatePDF'])->name('export');
+
+Route::get('/save-selected-exports', [WorkerController::class, 'saveSelectedExports'])->name('save-selected-exports');
+
+Route::get('/clear-selected-exports', [WorkerController::class, 'clearSelectedExports'])->name('clear-selected-exports');

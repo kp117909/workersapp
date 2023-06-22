@@ -5,17 +5,19 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Departments;
 use App\Models\Employees;
+use Dompdf\Dompdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Symfony\Component\Console\Input\Input;
 
 class WorkerController extends Controller
 {
     function index(Request $request){
 
         $query = Employees::query()->with(['titles', 'salaries', 'latestDepartmentManager.department', 'latestDepartmentEmployee.department']);
-
         $departaments = Departments::all();
+
+        $selectedExports = session('selectedExports', []);
+
+        $selectedExportsCount = count($selectedExports);
 
         if ($request->has('filter')) {
             $query->where(function ($query) {
@@ -102,10 +104,71 @@ class WorkerController extends Controller
 
         $query = $query->paginate(10);
 
-
-        return view('welcome', ['employees' => $query, 'departaments' => $departaments]);
+        return view('welcome', ['employees' => $query, 'departaments' => $departaments, 'selectedExportsCount' => $selectedExportsCount]);
 
     }
 
+    function generatePDF(Request $request)
+    {
+        $selectedExports = session('selectedExports', []);
+
+        $employees = Employees::whereIn('emp_no', $selectedExports)->get();
+
+        foreach ($employees as $employee) {
+            $totalSalary = $employee->salaries()->sum('salary');
+            $employee->totalSalary = $totalSalary;
+        }
+
+        $dompdf = new Dompdf();
+
+        $html = view('employee-pdf', compact('employees'))->render();
+
+        $dompdf->loadHtml($html);
+
+        $dompdf->render();
+
+        $fileName = 'exported_employees.pdf';
+
+
+        $pdfContent = $dompdf->output();
+
+        return response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+
+    }
+
+    public function saveSelectedExports(Request $request): \Illuminate\Http\JsonResponse
+    {
+        if($request->action == "add"){
+            $selectedExports = $request->input('selectedExports', []);
+
+            $currentSelectedExports = session('selectedExports', []);
+
+            $newSelectedExports = array_merge($currentSelectedExports, array_diff($selectedExports, $currentSelectedExports));
+            session(['selectedExports' => $newSelectedExports]);
+        }else{
+            $value = $request->input('value');
+
+            $selectedExports = session('selectedExports', []);
+
+            $key = array_search($value, $selectedExports);
+            if ($key !== false) {
+                unset($selectedExports[$key]);
+            }
+            session(['selectedExports' => $selectedExports]);
+        }
+
+
+        return response()->json(['success' => true]);
+    }
+
+    public function clearSelectedExports(): \Illuminate\Http\JsonResponse
+    {
+        session()->forget('selectedExports');
+
+        return response()->json(['success' => true]);
+    }
 
 }

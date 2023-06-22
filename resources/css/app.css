@@ -1,5 +1,7 @@
 body{margin-top:20px;
     background:#eee;
+    font-size:16px;
+    font-family: Calibri, sans-serif;
 }
 .card {
     box-shadow: 0 20px 27px 0 rgb(0 0 0 / 5%);
@@ -28,6 +30,18 @@ table th {
     margin-left: 0.75rem;
 }
 
+.mr10 {
+    margin-right: 2.75rem;
+}
+
 .pagination{
     margin:0.75rem;
 }
+
+.avatar:hover {
+    transform: scale(1.25);
+}
+
+
+
+

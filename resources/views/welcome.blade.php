@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://kit.fontawesome.com/3133d360bd.js" crossorigin="anonyous"></script>
     <title>{{__('Workers')}}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -74,7 +75,7 @@
                         </div>
                         <div class = "row">
                             <div class="text-center mt-3">
-                                <p>{{__("Checkbox for Departament")}}</p>
+                                <p>{{__("Select for Deparments")}}</p>
                             </div>
                             <div class="col-md-12">
                                 <div class="departments_wrapper text-center">
@@ -91,6 +92,24 @@
                         </div>
                     </div>
                 </form>
+                <div>
+                        <div class = "row">
+                            <div class="text-center mt-3">
+                                <p>{{__("Button to Export Checked Data to PDF")}}</p>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-check">
+                                    <div class="text-center ">
+                                        <button id="export-button"  data-url = "{{route('export')}}" class="btn btn-primary mr10">{{__("Export Data")}} </button>
+                                    </div>
+                                    <div class = "text-center mr10">
+                                        <p>{{ __("Number of currently selected data to export:") }} <b id="selectedExportsCount">{{ $selectedExportsCount }}</b></p>
+                                        <button id="clear-selects-btn" data-url = "{{ route('clear-selected-exports') }}" class="btn btn-danger">{{__("Uncheck all checkboxes")}}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
             </div>
         </div>
 
@@ -109,17 +128,18 @@
                             <th>{{__('Salary')}}</th>
                             <th>{{__('Department')}}</th>
                             <th>{{__('Job')}}</th>
+                            <th>{{__('Export')}}</th>
                         </tr>
                         </thead>
                         <tbody>
                         @foreach($employees as $employee)
-                            <tr class="align-middle">
+                            <tr class="align-middle" >
                                 <td>
                                     <div class="d-flex align-items-center">
                                         @if($employee->gender === "M")
-                                            <img src="https://bootdey.com/img/Content/avatar/avatar1.png" class="avatar sm rounded-pill me-3 flex-shrink-0" alt="Male">
+                                            <img data-toggle="modal" data-target="#infoModal{{ $employee->emp_no }}" src="https://bootdey.com/img/Content/avatar/avatar1.png" class="avatar sm rounded-pill me-3 flex-shrink-0" alt="Male">
                                         @else
-                                            <img src="https://bootdey.com/img/Content/avatar/avatar3.png" class="avatar sm rounded-pill me-3 flex-shrink-0" alt="Female">
+                                            <img data-toggle="modal" data-target="#infoModal{{ $employee->emp_no }}" src="https://bootdey.com/img/Content/avatar/avatar3.png" class="avatar sm rounded-pill me-3 flex-shrink-0" alt="Female">
                                         @endif
                                         <div>
                                             <div class="h6 mb-0 lh-1"> {{$employee->first_name}} {{$employee->last_name}}</div>
@@ -127,10 +147,38 @@
                                     </div>
                                 </td>
                                 <td>{{ $employee->titles->last()->title }}</td>
-                                <td>{{ $employee->salaries->last()->salary }} $</td>
+                                <td>{{ $employee->salaries->last()->salary }} {{__('$')}}</td>
                                 <td>{{ $employee->department->dept_name }}</td>
                                 <td>{{ $employee->getJob() }}</td>
+                                <td>
+                                    <input class="form-check-input export-checkbox" id="employee-checkbox" type="checkbox" name="export[]" data-url = "{{route('save-selected-exports')}}" value="{{ $employee->emp_no }}" {{ is_array(session('selectedExports')) && in_array($employee->emp_no, session('selectedExports')) ? 'checked' : '' }}>
+                                </td>
                             </tr>
+
+                            <div class="modal fade" id="infoModal{{ $employee->emp_no }}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h2 class="modal-title" id="exampleModalLabel">{{__('Detailed Information')}}</h2>
+                                        </div>
+                                        <div class="modal-body">
+                                            <h3>{{ $employee->first_name }} {{ $employee->last_name }}</h3><hr>
+                                            <h5>{{__('Current Department: ')}} <b>{{ $employee->department->dept_name }}</b></h5>
+                                            <h5>{{__('Current Job: ')}} <b>{{ $employee->getJob()}}</b></h5>
+                                            <h5>{{__('Current Salary: ')}} <b>{{ $employee->salaries->last()->salary }} {{__('$')}}</b></h5>
+                                            <hr>
+                                            <h2 class="modal-title" id="exampleModalLabel">{{__('History')}}</h2>
+                                            <h3>{{__("Salary History")}}</h3>
+                                            @foreach($employee->salaries as $salary)
+                                                <h5>{{$salary->from_date}} - {{$salary->to_date}} <i class="fa-solid fa-right-long"></i> {{$salary->salary}} {{__('$')}}</h5>
+                                            @endforeach
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">{{__('Close')}}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         @endforeach
                         </tbody>
                     </table>
@@ -141,7 +189,7 @@
                         'valueHigh' =>request()->input('valueHigh'),
                         'filterMale'=> request()->input('filterMale'),
                         'filterFemale' =>request()->input('filterFemale'),
-                        'departments' => request()->input('departments')
+                        'departments' => request()->input('departments'),
                     ])->onEachSide(1)->links('pagination::simple-bootstrap-4') }}
                 </div>
             </div>
@@ -150,7 +198,9 @@
 </div>
 </body>
 
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 </html>
