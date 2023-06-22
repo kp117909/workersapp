@@ -20,22 +20,22 @@ class Employees extends Model
         return $this->hasMany(Salaries::class, 'emp_no', 'emp_no');
     }
 
-    public function departmentManager()
+    public function departmentEmployees()
     {
-        return $this->hasOne(DeptManager::class, 'emp_no', 'emp_no');
+        return $this->hasMany(DeptEmp::class, 'emp_no', 'emp_no');
     }
 
-    public function departmentEmployee()
+    public function departmentManagers()
     {
-        return $this->hasOne(DeptEmp::class, 'emp_no', 'emp_no');
+        return $this->hasMany(DeptManager::class, 'emp_no', 'emp_no');
     }
 
     public function department()
     {
-        if ($this->departmentManager) {
-            return $this->departmentManager->belongsTo(Departments::class, 'dept_no', 'dept_no');
-        } elseif ($this->departmentEmployee) {
-            return $this->departmentEmployee->belongsTo(Departments::class, 'dept_no', 'dept_no');
+        if ($this->departmentManagers->isNotEmpty()) {
+            return $this->departmentManagers->last()->belongsTo(Departments::class, 'dept_no', 'dept_no');
+        } elseif ($this->departmentEmployees->isNotEmpty()) {
+            return $this->departmentEmployees->last()->belongsTo(Departments::class, 'dept_no', 'dept_no');
         }
 
         return null;
@@ -43,24 +43,13 @@ class Employees extends Model
 
     public function getJob()
     {
-        if ($this->departmentManager) {
+        if ($this->departmentManagers->isNotEmpty()) {
             return 'Manager';
-        } elseif ($this->departmentEmployee) {
+        } elseif ($this->departmentEmployees->isNotEmpty()) {
             return 'Employee';
         }
 
         return null;
-    }
-
-    public function latestDepartmentEmployee()
-    {
-        return $this->hasMany(DeptEmp::class, 'emp_no', 'emp_no')
-            ->latest('from_date');
-    }
-    public function latestDepartmentManager()
-    {
-        return $this->hasMany(DeptManager::class, 'emp_no', 'emp_no')
-            ->latest('from_date');
     }
 
 }

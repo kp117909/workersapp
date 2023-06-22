@@ -12,8 +12,12 @@ class WorkerController extends Controller
 {
     function index(Request $request){
 
-        $query = Employees::query()->with(['titles', 'salaries', 'latestDepartmentManager.department', 'latestDepartmentEmployee.department']);
-        $departaments = Departments::all();
+        $query = Employees::query()->with(['titles', 'salaries']);
+        $department = Departments::all();
+
+        $selectedDepartments = $request->input('departments', []);
+
+        session(['selectedDepartments' => $selectedDepartments]);
 
         $selectedExports = session('selectedExports', []);
 
@@ -21,9 +25,9 @@ class WorkerController extends Controller
 
         if ($request->has('filter')) {
             $query->where(function ($query) {
-                $query->whereHas('departmentEmployee', function ($query) {
+                $query->whereHas('departmentEmployees', function ($query) {
                     $query->where('to_date', '9999-01-01');
-                })->orWhereHas('departmentManager', function ($query) {
+                })->orWhereHas('departmentManagers', function ($query) {
                     $query->where('to_date', '9999-01-01');
                 });
             });
@@ -77,7 +81,6 @@ class WorkerController extends Controller
         }
 
 
-
         if ($request->has('departments')) {
             $selectedDepartments = $request->input('departments');
 
@@ -104,7 +107,7 @@ class WorkerController extends Controller
 
         $query = $query->paginate(10);
 
-        return view('welcome', ['employees' => $query, 'departaments' => $departaments, 'selectedExportsCount' => $selectedExportsCount]);
+        return view('welcome', ['employees' => $query, 'departments' => $department, 'selectedExportsCount' => $selectedExportsCount]);
 
     }
 
@@ -169,6 +172,12 @@ class WorkerController extends Controller
         session()->forget('selectedExports');
 
         return response()->json(['success' => true]);
+    }
+
+    public function showProfile($emp_no)
+    {
+        $employee = Employees::where('emp_no', $emp_no)->first();
+        return view('profile', compact('employee'));
     }
 
 }

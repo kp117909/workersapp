@@ -21,3 +21,6 @@ Route::get('/export', [WorkerController::class, 'generatePDF'])->name('export');
 Route::get('/save-selected-exports', [WorkerController::class, 'saveSelectedExports'])->name('save-selected-exports');
 
 Route::get('/clear-selected-exports', [WorkerController::class, 'clearSelectedExports'])->name('clear-selected-exports');
+
+Route::get('/employee-profile/{emp_no}', [WorkerController::class, 'showProfile'])->name('employee-profile');
+
