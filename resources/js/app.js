@@ -14,7 +14,6 @@ $(document).ready(function () {
         $('#filter-form').submit();
     });
 
-
     $('#filterFemale').on('change', function () {
         $('#filter-form').submit();
     });

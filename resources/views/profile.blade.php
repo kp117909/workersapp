@@ -129,29 +129,59 @@
                         </div>
                         <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <label>{{__("Titles")}}</label>
-                                    @foreach($employee->titles->reverse() as $title)
-                                        <p class = "m-3">{{$title->from_date}} - {{$title->to_date}} <i class="fa-solid fa-right-long"></i> {{$title->title}}</p>
-                                    @endforeach
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label>{{__("Deparments")}}</label>
-                                    @foreach($employee->departmentEmployees as $deparment)
-                                        <p class = "m-3">{{$deparment->from_date}} - {{$deparment->to_date}} <i class="fa-solid fa-right-long"></i> {{$deparment->department->dept_name}}</p>
-                                    @endforeach
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label>{{__("Salary")}}</label>
-                                    @foreach($employee->salaries as $salary)
-                                        <p class ="m-3">{{$salary->from_date}} - {{$salary->to_date}} <i class="fa-solid fa-right-long"></i> {{$salary->salary}} <b style = "color:green">{{__('$')}}</b></p>
-                                    @endforeach
-                                </div>
-                                <div class="col-md-6">
+                                <div class="col-md-12">
+                                    <div class="table-responsive">
+                                        <table class="table mb-0">
+                                            <thead class="small text-uppercase bg-body text-muted">
+                                                <tr>
+                                                    <th>{{ __("Date To") }}</th>
+                                                    <th>{{ __("Date From") }}</th>
+                                                    <th>{{ __("Title") }}</th>
+                                                    <th>{{ __("Department") }}</th>
+                                                    <th>{{ __("Salary") }}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            @foreach($employee->salaries->reverse() as $salary)
+                                                @php
+                                                    $matchingTitles = $employee->titles->filter(function ($title) use ($salary) {
+                                                        return $title->from_date <= $salary->to_date && $title->to_date >= $salary->from_date;
+                                                    });
+
+                                                    $matchingDepartments = $employee->departmentEmployees->filter(function ($department) use ($salary) {
+                                                        return $department->from_date <= $salary->to_date && $department->to_date >= $salary->from_date;
+                                                    });
+                                                @endphp
+                                                @foreach($matchingTitles->reverse() as $title)
+                                                    @foreach($matchingDepartments->reverse() as $department)
+                                                        <tr>
+                                                            <td>
+                                                                @if($salary->to_date === '9999-01-01')
+                                                                    {{ __("Now") }}
+                                                                @else
+                                                                    {{ $salary->to_date }}
+                                                                @endif
+                                                            </td>
+                                                            <td>
+                                                                {{ $salary->from_date }}
+                                                            </td>
+                                                            <td>
+                                                                {{ $title->title }}
+                                                            </td>
+                                                            <td>
+                                                                {{ $department->department->dept_name }}
+                                                            </td>
+                                                            <td>
+                                                                {{ $salary->salary }} <b style="color:green">{{ __('$') }}</b>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                @endforeach
+                                            @endforeach
+                                            </tbody>
+                                        </table>
+                                        <p class = "text-right m-2">{{__("Total Earned Salary")}} {{$employee->salaries()->sum('salary')}} <b style="color:green">{{ __('$') }}</b></p>
+                                    </div>
                                 </div>
                             </div>
                         </div>

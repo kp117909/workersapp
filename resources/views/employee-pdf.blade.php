@@ -43,65 +43,58 @@
     <h3> {{__("Rank:")}} {{ $employee->getJob() }}</h3>
     <hr>
 
-    <h4 > {{__("History Of Salary:")}}</h4>
-    <table>
-        <thead>
+    <h4 > {{__("History:")}}</h4>
+
+    <table class="table mb-0">
+        <thead class="small text-uppercase bg-body text-muted">
         <tr>
-            <th>{{__("Date From")}}</th>
-            <th>{{__("Date To")}}</th>
-            <th>{{__("Salary")}}</th>
+            <th>Date To</th>
+            <th>Date From</th>
+            <th>Title</th>
+            <th>Department</th>
+            <th>Salary</th>
         </tr>
         </thead>
         <tbody>
         @foreach($employee->salaries->reverse() as $salary)
-            <tr>
-                <td>{{$salary->from_date}}</td>
-                <td>{{$salary->to_date}}</td>
-                <td>{{$salary->salary}} <b style = "color:green">{{__('$')}}</b></td>
-            </tr>
-        </tbody>
-        @endforeach
-    </table>
+            @php
+                $matchingTitles = $employee->titles->filter(function ($title) use ($salary) {
+                    return $title->from_date <= $salary->to_date && $title->to_date >= $salary->from_date;
+                });
 
-    <h4 > {{__("History Of Titles:")}}</h4>
-    <table>
-        <thead>
-        <tr>
-            <th>{{__("Date From")}}</th>
-            <th>{{__("Date To")}}</th>
-            <th>{{__("Title")}}</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach($employee->titles as $title)
-            <tr>
-                <td>{{$title->from_date}}</td>
-                <td>{{$title->to_date}}</td>
-                <td>{{$title->title}}</b></td>
-            </tr>
-        </tbody>
+                $matchingDepartments = $employee->departmentEmployees->filter(function ($department) use ($salary) {
+                    return $department->from_date <= $salary->to_date && $department->to_date >= $salary->from_date;
+                });
+            @endphp
+            @foreach($matchingTitles->reverse() as $title)
+                @foreach($matchingDepartments->reverse() as $department)
+                    <tr>
+                        <td>
+                            @if($salary->to_date === '9999-01-01')
+                                {{ __("Now") }}
+                            @else
+                                {{ $salary->to_date }}
+                            @endif
+                        </td>
+                        <td>
+                            {{ $salary->from_date }}
+                        </td>
+                        <td>
+                            {{ $title->title }}
+                        </td>
+                        <td>
+                            {{ $department->department->dept_name }}
+                        </td>
+                        <td>
+                            {{ $salary->salary }} <b style="color:green">{{ __('$') }}</b>
+                        </td>
+                    </tr>
+                @endforeach
+            @endforeach
         @endforeach
-    </table>
-
-    <h4 > {{__("History Of Departments:")}}</h4>
-    <table>
-        <thead>
-        <tr>
-            <th>{{__("Date From")}}</th>
-            <th>{{__("Date To")}}</th>
-            <th>{{__("Department Name")}}</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach($employee->departmentEmployees as $deparment)
-            <tr>
-                <td>{{$deparment->from_date}}</td>
-                <td>{{$deparment->to_date}}</td>
-                <td>{{$deparment->department->dept_name}}</td>
-            </tr>
         </tbody>
-        @endforeach
     </table>
+    <p class = "text-right m-2">{{__("Total Earned Salary")}} {{$employee->salaries()->sum('salary')}} <b style="color:green">{{ __('$') }}</b></p>
 </body>
 </html>
 

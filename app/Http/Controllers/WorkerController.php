@@ -215,6 +215,7 @@ class WorkerController extends Controller
     public function showProfile($emp_no)
     {
         $employee = Employees::where('emp_no', $emp_no)->first();
+
         return view('profile', compact('employee'));
     }
 

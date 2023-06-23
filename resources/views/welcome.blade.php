@@ -124,7 +124,6 @@
             <div class="overflow-hidden card table-nowrap table-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">{{__('Workers')}}</h5>
-                    <a href="#!" class="btn btn-light btn-sm">{{__('View All')}}</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table mb-0">
@@ -174,7 +173,6 @@
                         @endforeach
                         </tbody>
                     </table>
-                    <div class="d-flex justify-content-center">
                         {!! $employees->appends([
                             'filter-employed' => request()->input('filter-employed') ,
                             'filter-unemployed' => request()->input('filter-unemployed') ,
@@ -185,7 +183,6 @@
                             'filterFemale' =>request()->input('filterFemale'),
                             'departments' =>request()->input('departments')
                         ]) !!}
-                    </div>
                 </div>
             </div>
         </div>
