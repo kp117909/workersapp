@@ -23,10 +23,16 @@
                             <p>{{__("Checkbox for Currently Employed")}}</p>
                         </div>
                         <div class="form-check ml3 mb-3">
-                            <label class="form-check-label" for="filter">
+                            <label class="form-check-label" for="filter-employed">
                                 {{__('Employed')}}
                             </label>
-                            <input class="form-check-input" type="checkbox" name="filter" id="filter" value="1" {{ old('filter', request()->has('filter')) ? 'checked' : '' }}>
+                            <input class="form-check-input" type="checkbox" name="filter-employed" id="filter-employed" value="1" {{ old('filter-employed', request()->has('filter-employed')) ? 'checked' : '' }}>
+                        </div>
+                        <div class="form-check ml3 mb-3">
+                            <label class="form-check-label" for="filter-unemployed">
+                                {{__('Unemployed')}}
+                            </label>
+                            <input class="form-check-input" type="checkbox" name="filter-unemployed" id="filter-unemployed" value="1" {{ old('filter-unemployed', request()->has('filter-unemployed')) ? 'checked' : '' }}>
                         </div>
                         <div class="row pb-3">
                             <div class="text-center">
@@ -153,7 +159,13 @@
                                 </td>
                                 <td>{{ $employee->titles()->latest('to_date')->first()->title }}</td>
                                 <td>{{ $employee->salaries()->latest('to_date')->first()->salary }} {{__('$')}}</td>
-                                <td>{{ $employee->department->dept_name}}</td>
+                                <td>
+                                @if ($employee->departmentManagers->isNotEmpty())
+                                    {{ $employee->departmentManagers()->latest('to_date')->first()->department->dept_name }}
+                                @elseif ($employee->departmentEmployees->isNotEmpty())
+                                    {{ $employee->departmentEmployees()->latest('to_date')->first()->department->dept_name }}
+                                @endif
+                                </td>
                                 <td>{{ $employee->getJob() }}</td>
                                 <td>
                                     <input class="form-check-input export-checkbox" id="employee-checkbox" type="checkbox" name="export[]" data-url = "{{route('save-selected-exports')}}" value="{{ $employee->emp_no }}" {{ is_array(session('selectedExports')) && in_array($employee->emp_no, session('selectedExports')) ? 'checked' : '' }}>
@@ -164,7 +176,8 @@
                     </table>
                     <div class="d-flex justify-content-center">
                         {!! $employees->appends([
-                            'filter' => request()->input('filter') ,
+                            'filter-employed' => request()->input('filter-employed') ,
+                            'filter-unemployed' => request()->input('filter-unemployed') ,
                             'search' =>request()->input('search'),
                             'valueLow' =>request()->input('valueLow'),
                             'valueHigh' =>request()->input('valueHigh'),

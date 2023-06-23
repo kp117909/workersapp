@@ -23,14 +23,26 @@ class WorkerController extends Controller
 
         $selectedExportsCount = count($selectedExports);
 
-        if ($request->has('filter')) {
-            $query->where(function ($query) {
-                $query->whereHas('departmentEmployees', function ($query) {
-                    $query->where('to_date', '9999-01-01');
-                })->orWhereHas('departmentManagers', function ($query) {
-                    $query->where('to_date', '9999-01-01');
+        if (!$request->has('filter-employed') || !$request->has('filter-unemployed')) {
+            if ($request->has('filter-employed')) {
+                $query->where(function ($query) {
+                    $query->whereHas('departmentEmployees', function ($query) {
+                        $query->where('to_date', '9999-01-01');
+                    })->orWhereHas('departmentManagers', function ($query) {
+                        $query->where('to_date', '9999-01-01');
+                    });
                 });
-            });
+            }
+
+            if ($request->has('filter-unemployed')) {
+                $query->where(function ($query) {
+                    $query->whereHas('departmentEmployees', function ($query) {
+                        $query->where('to_date', '!=', '9999-01-01');
+                    })->orWhereHas('departmentManagers', function ($query) {
+                        $query->where('to_date', '!=', '9999-01-01');
+                    });
+                });
+            }
         }
 
         if ($request->has('search')) {
@@ -87,8 +99,8 @@ class WorkerController extends Controller
             $query->select('employees.*', 'departments.dept_no')
                 ->leftJoin('dept_emp', function ($join) {
                     $join->on('employees.emp_no', '=', 'dept_emp.emp_no')
-                        ->where('dept_emp.from_date', function ($subQuery) {
-                            $subQuery->selectRaw('MAX(from_date)')
+                        ->where('dept_emp.to_date', function ($subQuery) {
+                            $subQuery->selectRaw('MAX(to_date)')
                                 ->from('dept_emp')
                                 ->whereColumn('dept_emp.emp_no', 'employees.emp_no');
                         });
@@ -96,8 +108,8 @@ class WorkerController extends Controller
                 ->leftJoin('departments', 'dept_emp.dept_no', '=', 'departments.dept_no')
                 ->leftJoin('dept_manager', function ($join) {
                     $join->on('employees.emp_no', '=', 'dept_manager.emp_no')
-                        ->where('dept_manager.from_date', function ($subQuery) {
-                            $subQuery->selectRaw('MAX(from_date)')
+                        ->where('dept_manager.to_date', function ($subQuery) {
+                            $subQuery->selectRaw('MAX(to_date)')
                                 ->from('dept_manager')
                                 ->whereColumn('dept_manager.emp_no', 'employees.emp_no');
                         });
@@ -124,13 +136,39 @@ class WorkerController extends Controller
 
         $dompdf = new Dompdf();
 
-        $html = view('employee-pdf', compact('employees'))->render();
+        $html = view('employees-pdf', compact('employees'))->render();
 
         $dompdf->loadHtml($html);
 
         $dompdf->render();
 
         $fileName = 'exported_employees.pdf';
+
+
+        $pdfContent = $dompdf->output();
+
+        return response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+
+    }
+
+    function generatePDFEmployee(Request $request)
+    {
+        $id = $request->id;
+
+        $employee = Employees::where('emp_no', $id)->first();
+
+        $dompdf = new Dompdf();
+
+        $html = view('employee-pdf', compact('employee'))->render();
+
+        $dompdf->loadHtml($html);
+
+        $dompdf->render();
+
+        $fileName = 'exported_employee.pdf';
 
 
         $pdfContent = $dompdf->output();

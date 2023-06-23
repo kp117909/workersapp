@@ -26,7 +26,11 @@
                             {{ $employee->first_name }} {{ $employee->last_name }}
                         </h5>
                         <h6>
-                            {{ $employee->department->dept_name }}
+                            @if ($employee->departmentManagers->isNotEmpty())
+                                {{ $employee->departmentManagers()->latest('to_date')->first()->department->dept_name }}
+                            @elseif ($employee->departmentEmployees->isNotEmpty())
+                                {{ $employee->departmentEmployees()->latest('to_date')->first()->department->dept_name }}
+                            @endif
                         </h6>
                         <p class="proile-rating">{{__("RANK")}} : <span>{{ $employee->getJob()}}</span></p>
                         <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -41,6 +45,8 @@
                 </div>
                 <div class="col-md-2">
                     <button type="button" id = "go-back" class="btn btn-primary">{{__("Back")}}</button>
+
+                    <button type="button" id = "export-data" data-id = "{{$employee->emp_no}}" data-url = "{{route('export-employee')}}" class="btn btn-warning">{{__("Export Data")}}</button>
                 </div>
             </div>
             <div class="row">
@@ -94,6 +100,14 @@
                             </div>
                             <div class="row">
                                 <div class="col-md-6">
+                                    <label>{{__("Title")}}</label>
+                                </div>
+                                <div class="col-md-6">
+                                    <p>{{$employee->titles()->latest('to_date')->first()->title }}</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
                                     <label>{{__("Hire Date")}}</label>
                                 </div>
                                 <div class="col-md-6">
@@ -105,7 +119,11 @@
                                     <label>{{__("Department")}}</label>
                                 </div>
                                 <div class="col-md-6">
-                                     <p>{{$employee->department->dept_name }}</p>
+                                    @if ($employee->departmentManagers->isNotEmpty())
+                                        <p> {{ $employee->departmentManagers()->latest('to_date')->first()->department->dept_name }}</p>
+                                    @elseif ($employee->departmentEmployees->isNotEmpty())
+                                        <p>{{ $employee->departmentEmployees()->latest('to_date')->first()->department->dept_name }}</p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -113,7 +131,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <label>{{__("Titles")}}</label>
-                                    @foreach($employee->titles as $title)
+                                    @foreach($employee->titles->reverse() as $title)
                                         <p class = "m-3">{{$title->from_date}} - {{$title->to_date}} <i class="fa-solid fa-right-long"></i> {{$title->title}}</p>
                                     @endforeach
                                 </div>

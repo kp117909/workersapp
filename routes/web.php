@@ -24,3 +24,4 @@ Route::get('/clear-selected-exports', [WorkerController::class, 'clearSelectedEx
 
 Route::get('/employee-profile/{emp_no}', [WorkerController::class, 'showProfile'])->name('employee-profile');
 
+Route::get('/export-employee', [WorkerController::class, 'generatePDFEmployee'])->name('export-employee');

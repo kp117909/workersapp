@@ -2,7 +2,11 @@
 import './bootstrap';
 
 $(document).ready(function () {
-    $('#filter').on('change', function () {
+    $('#filter-employed').on('change', function () {
+        $('#filter-form').submit();
+    });
+
+    $('#filter-unemployed').on('change', function () {
         $('#filter-form').submit();
     });
 
