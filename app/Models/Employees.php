@@ -10,6 +10,10 @@ class Employees extends Model
 {
     use HasFactory;
 
+    protected $table = 'employees';
+    protected $primaryKey = 'emp_no';
+    public $timestamps = false;
+
     public function titles()
     {
         return $this->hasMany(Titles::class, 'emp_no', 'emp_no');
@@ -23,6 +27,16 @@ class Employees extends Model
     public function departmentEmployees()
     {
         return $this->hasMany(DeptEmp::class, 'emp_no', 'emp_no');
+    }
+
+    public function departmentEmployeesLatest()
+    {
+        return $this->hasMany(DeptEmpLatest::class, 'emp_no', 'emp_no');
+    }
+
+    public function departmentManagersLatest()
+    {
+        return $this->hasMany(DeptManagerLatest::class, 'emp_no', 'emp_no');
     }
 
     public function departmentManagers()

@@ -7,12 +7,12 @@ use App\Models\Departments;
 use App\Models\Employees;
 use Dompdf\Dompdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class WorkerController extends Controller
 {
     function index(Request $request){
-
-        $query = Employees::query()->with(['titles', 'salaries']);
+        $query = Employees::query()->with(['titles', 'salaries', 'departmentEmployees', 'departmentManagers']);
         $department = Departments::all();
 
         $selectedDepartments = $request->input('departments', []);
@@ -22,28 +22,6 @@ class WorkerController extends Controller
         $selectedExports = session('selectedExports', []);
 
         $selectedExportsCount = count($selectedExports);
-
-        if (!$request->has('filter-employed') || !$request->has('filter-unemployed')) {
-            if ($request->has('filter-employed')) {
-                $query->where(function ($query) {
-                    $query->whereHas('departmentEmployees', function ($query) {
-                        $query->where('to_date', '9999-01-01');
-                    })->orWhereHas('departmentManagers', function ($query) {
-                        $query->where('to_date', '9999-01-01');
-                    });
-                });
-            }
-
-            if ($request->has('filter-unemployed')) {
-                $query->where(function ($query) {
-                    $query->whereHas('departmentEmployees', function ($query) {
-                        $query->where('to_date', '!=', '9999-01-01');
-                    })->orWhereHas('departmentManagers', function ($query) {
-                        $query->where('to_date', '!=', '9999-01-01');
-                    });
-                });
-            }
-        }
 
         if ($request->has('search')) {
             $searchTerm = $request->get('search');
@@ -78,10 +56,9 @@ class WorkerController extends Controller
                                 ->from('salaries')
                                 ->whereColumn('emp_no', 'employees.emp_no');
                         });
-                })->where('s.salary', '<=', $searchTerm);
+                })->where('ss.salary', '<=', $searchTerm);
             }
         }
-
 
         if (!$request->has('filterMale') || !$request->has('filterFemale')) {
             if ($request->has('filterMale')) {
@@ -91,7 +68,6 @@ class WorkerController extends Controller
                 $query->where('gender', 'F');
             }
         }
-
 
         if ($request->has('departments')) {
             $selectedDepartments = $request->input('departments');
@@ -117,7 +93,36 @@ class WorkerController extends Controller
                 ->whereIn('departments.dept_no', $selectedDepartments);
         }
 
-        $query = $query->paginate(10);
+        if (!$request->has('filter-employed') || !$request->has('filter-unemployed')) {
+
+            if ($request->has('filter-employed')) {
+                $query->where(function ($query) {
+                    $query->where(function ($query) {
+                        $query->whereHas('departmentEmployees', function ($query) {
+                            $query->where('to_date', '=', '9999-01-01')->latest('to_date');
+                        });
+                    })->orWhere(function ($query) {
+                        $query->whereHas('departmentManagers', function ($query) {
+                            $query->where('to_date', '=', '9999-01-01')->latest('to_date');
+                        });
+                    });
+                });
+            }
+
+            if ($request->has('filter-unemployed')) {
+                $query->where(function ($query) {
+                    $query->whereHas('departmentEmployeesLatest', function ($subquery) {
+                        $subquery->where('to_date', '!=', '9999-01-01');
+                    });
+                })->orWhere(function ($query) {
+                    $query->whereHas('departmentManagersLatest', function ($subquery) {
+                        $subquery->where('to_date', '!=', '9999-01-01');
+                    });
+                });
+            }
+        }
+
+        $query = $query->orderBy('last_name')->paginate(10);
 
         return view('welcome', ['employees' => $query, 'departments' => $department, 'selectedExportsCount' => $selectedExportsCount]);
 
