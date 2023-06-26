@@ -130,8 +130,19 @@
                         <thead class="small text-uppercase bg-body text-muted">
                         <tr>
                             <th>{{__('Name')}}</th>
-                            <th>{{__('Tittle')}}</th>
-                            <th>{{__('Salary')}}</th>
+                            <th>{{__('Title')}}</th>
+                            <th>
+                                {{__('Salary')}}
+                                <a href="{{ $employees->appends(array_merge([
+                                    'sort' => 'salary',
+                                    'direction' => (request()->input('sort') === 'salary' && request()->input('direction') === 'asc') ? 'desc' : 'asc',
+                                    'page' => $employees->currentPage()
+                                ], request()->except(['sort', 'direction', 'page'])))->url($employees->currentPage()) }}">
+                                    <i class="fa-solid fa-sort"></i>
+                                </a>
+
+
+                            </th>
                             <th>{{__('Department')}}</th>
                             <th>{{__('Job')}}</th>
                             <th>{{__('Export')}}</th>
@@ -173,16 +184,18 @@
                         @endforeach
                         </tbody>
                     </table>
-                        {!! $employees->appends([
-                            'filter-employed' => request()->input('filter-employed') ,
-                            'filter-unemployed' => request()->input('filter-unemployed') ,
-                            'search' =>request()->input('search'),
-                            'valueLow' =>request()->input('valueLow'),
-                            'valueHigh' =>request()->input('valueHigh'),
-                            'filterMale'=> request()->input('filterMale'),
-                            'filterFemale' =>request()->input('filterFemale'),
-                            'departments' =>request()->input('departments')
-                        ]) !!}
+                    {!! $employees->appends([
+                      'filter-employed' => request()->input('filter-employed'),
+                      'filter-unemployed' => request()->input('filter-unemployed'),
+                      'search' => request()->input('search'),
+                      'valueLow' => request()->input('valueLow'),
+                      'valueHigh' => request()->input('valueHigh'),
+                      'filterMale' => request()->input('filterMale'),
+                      'filterFemale' => request()->input('filterFemale'),
+                      'departments' => request()->input('departments'),
+                      'sort' => request()->input('sort'),
+                      'direction' => request()->input('direction')
+                    ])->links() !!}
                 </div>
             </div>
         </div>

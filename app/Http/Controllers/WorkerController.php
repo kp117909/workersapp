@@ -23,6 +23,24 @@ class WorkerController extends Controller
 
         $selectedExportsCount = count($selectedExports);
 
+        if ($request->input('sort') === 'salary') {
+            $latestSalariesSubquery = DB::table('salaries')
+                ->selectRaw('MAX(from_date)')
+                ->whereColumn('salaries.emp_no', 'employees.emp_no')
+                ->toSql();
+
+            $query->leftJoin('salaries', function ($join) use ($latestSalariesSubquery) {
+                $join->on('employees.emp_no', '=', 'salaries.emp_no')
+                    ->where('salaries.from_date', '=', DB::raw("($latestSalariesSubquery)"));
+            });
+
+            if ($request->input('direction') === 'desc') {
+                $query->orderByDesc('salaries.salary');
+            } else {
+                $query->orderBy('salaries.salary');
+            }
+        }
+
         if ($request->has('search')) {
             $searchTerm = $request->get('search');
             $query->where(function ($query) use ($searchTerm) {
@@ -117,12 +135,12 @@ class WorkerController extends Controller
                 })->orWhere(function ($query) {
                     $query->whereHas('departmentManagersLatest', function ($subquery) {
                         $subquery->where('to_date', '!=', '9999-01-01');
-                    });
+                    })->whereDoesntHave('departmentEmployeesLatest');
                 });
             }
         }
 
-        $query = $query->orderBy('last_name')->paginate(10);
+        $query = $query->paginate(10);
 
         return view('welcome', ['employees' => $query, 'departments' => $department, 'selectedExportsCount' => $selectedExportsCount]);
 

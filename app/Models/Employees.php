@@ -5,13 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Kyslik\ColumnSortable\Sortable;
 
 class Employees extends Model
 {
-    use HasFactory;
+    use HasFactory, Sortable;
 
     protected $table = 'employees';
     protected $primaryKey = 'emp_no';
+    public array $sortable = ['first_name'];
     public $timestamps = false;
 
     public function titles()
